@@ -1,16 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const grid = document.querySelector('.grid')
+    const scoreDisplay = document.getElementById('score')
     const width = 8;
     const squares = [];
     let score = 0;
 
+
     const candyColors = [
-        'red',
-        'yellow',
-        'orange',
-        'purple',
-        'green',
-        'blue'
+        'url(images/red-candy.png)',
+        'url(images/yellow-candy.png)',
+        'url(images/orange-candy.png)',
+        'url(images/purple-candy.png)',
+        'url(images/green-candy.png)',
+        'url(images/blue-candy.png)'
     ]
 
     //Create board 
@@ -21,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             square.setAttribute('draggable', true);
             square.setAttribute('id', i)
             let randomColor = Math.floor(Math.random() * candyColors.length);
-            square.style.backgroundColor = candyColors[randomColor];
+            square.style.backgroundImage = candyColors[randomColor];
             grid.appendChild(square);
             squares.push(square)
         }
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function dragStart() {
-        colorBeingDragged = this.style.backgroundColor;
+        colorBeingDragged = this.style.backgroundImage;
         squareIdBeingDragged = parseInt(this.id)
         console.log(colorBeingDragged)
         console.log(this.id, 'dragStart')       
@@ -79,20 +81,36 @@ document.addEventListener('DOMContentLoaded', () => {
          if( squareIdBeingReplaced && validMove) {
              squareIdBeingReplaced = null;
          } else if (squareIdBeingReplaced && !validMove) {
-             squares[squareIdBeingReplaced].style.backgroundColor = colorBeingReplaced;
-             squares[squareIdBeingDragged].style.backgroundColor = colorBeingDragged;
+             squares[squareIdBeingReplaced].style.backgroundImage = colorBeingReplaced;
+             squares[squareIdBeingDragged].style.backgroundImage = colorBeingDragged;
          } else {
-             squares[squareIdBeingDragged].style.backgroundColor = colorBeingDragged
+             squares[squareIdBeingDragged].style.backgroundImage = colorBeingDragged
          }
 
     }
 
     function dragDrop() {
          console.log(this.id, 'dragDrop')
-         colorBeingReplaced = this.style.backgroundColor;
+         colorBeingReplaced = this.style.backgroundImage;
          squareIdBeingReplaced = parseInt(this.id)
-         this.style.backgroundColor = colorBeingDragged;
-         squares[squareIdBeingDragged].style.backgroundColor = colorBeingReplaced;
+         this.style.backgroundImage = colorBeingDragged;
+         squares[squareIdBeingDragged].style.backgroundImage = colorBeingReplaced;
+    }
+
+    // drop candies once some have been cleared
+    function moveDown() {
+        for( i = 0; i < 55; i++) {
+            if (squares[i + width].style.backgroundImage === '') {
+                squares[i + width].style.backgroundImage = squares[i].style.backgroundImage;
+                squares[i].style.backgroundImage = ''
+                const firstRow = [0, 1, 2, 3, 4, 5, 6, 7]
+                const isFirstRow = firstRow.includes(i)
+                if (isFirstRow && squares[i].style.backgroundImage === '') {
+                    let randomColor = Math.floor(Math.random() * candyColors.length);
+                    squares[i].style.backgroundImage = candyColors[randomColor]
+                }
+            }
+        }
     }
 
     //Checking for matches
@@ -100,13 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkRowForThree() {
         for (i = 0; i < 61; i++) {
             let rowOfThree = [i, i+1, i+2];
-            let decidedColor = squares[i].style.backgroundColor;
-            const isBlank = squares[i].style.backgroundColor === '';
+            let decidedColor = squares[i].style.backgroundImage;
+            const isBlank = squares[i].style.backgroundImage === '';
+            const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55]
 
-            if (rowOfThree.every(index => squares[index].style.backgroundColor === decidedColor && !isBlank)) {
+            if(notValid.includes(i)) continue
+
+            if (rowOfThree.every(index => squares[index].style.backgroundImage === decidedColor && !isBlank)) {
                 score += 3;
+                scoreDisplay.innerHTML = score
                 rowOfThree.forEach(index => {
-                    squares[index].style.backgroundColor = '';
+                    squares[index].style.backgroundImage = '';
                 })
             }
 
@@ -118,16 +140,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkColumnForThree() {
         for (i = 0; i < 47; i++) {
             let columnOfThree = [i, i+width, i+width*2];
-            let decidedColor = squares[i].style.backgroundColor;
-            const isBlank = squares[i].style.backgroundColor === '';
-            const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55]
+            let decidedColor = squares[i].style.backgroundImage;
+            const isBlank = squares[i].style.backgroundImage === '';
+            
 
-            if(notValid.includes(i)) continue
-
-            if (columnOfThree.every(index => squares[index].style.backgroundColor === decidedColor && !isBlank)) {
+            if (columnOfThree.every(index => squares[index].style.backgroundImage === decidedColor && !isBlank)) {
                 score += 3;
+                scoreDisplay.innerHTML = score
                 columnOfThree.forEach(index => {
-                    squares[index].style.backgroundColor = '';
+                    squares[index].style.backgroundImage = '';
                 })
             }
 
@@ -135,10 +156,70 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     checkColumnForThree()
 
+    //check for row of four 
+    function checkRowForFour() {
+        for (i = 0; i < 60; i++) {
+            let rowOfFour = [i, i+1, i+2, i+3];
+            let decidedColor = squares[i].style.backgroundImage;
+            const isBlank = squares[i].style.backgroundImage === '';
+
+            const notValid = [5, 6, 7, 13, 14, 15, 21, 22, 23, 28, 30, 31, 37, 38, 39, 45, 46, 47, 53, 54, 55]
+
+            if(notValid.includes(i)) continue
+
+            if (rowOfFour.every(index => squares[index].style.backgroundImage === decidedColor && !isBlank)) {
+                score += 4;
+                scoreDisplay.innerHTML = score
+                rowOfFour.forEach(index => {
+                    squares[index].style.backgroundImage = '';
+                })
+            }
+
+        }
+    }
+    checkRowForFour()
+
+    //check for column of four
+    function checkColumnForFour() {
+        for (i = 0; i < 47; i++) {
+            let columnOfFour = [i, i+width, i+width*2, i+width*3];
+            let decidedColor = squares[i].style.backgroundImage;
+            const isBlank = squares[i].style.backgroundImage === '';
+            const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55]
+
+            if(notValid.includes(i)) continue
+
+            if (columnOfFour.every(index => squares[index].style.backgroundImage === decidedColor && !isBlank)) {
+                score += 4;
+                scoreDisplay.innerHTML = score
+                columnOfFour.forEach(index => {
+                    squares[index].style.backgroundImage = '';
+                })
+            }
+
+        }
+    }
+    checkColumnForFour()
+
     window.setInterval(function(){
+        moveDown()
+        checkRowForFour()
+        checkColumnForFour()
         checkRowForThree()
         checkColumnForThree()
     }, 100)
 
 })
 
+/* 
+Created using Ania Kubow's Build your own CANDY CRUSH tutorial <3
+Copyright (c) 2020 Ania Kubow
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+associated documentation files (the "Software"), to deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
+the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+*/
